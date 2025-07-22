@@ -1,0 +1,252 @@
+{% extends 'shortener/base.html' %}
+{% load static %}
+
+{% block title %}Home - URL Shortener{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <!-- Header -->
+        <div class="text-center mb-5">
+            <h1 class="display-4 text-primary mb-3">
+                <i class="fas fa-link"></i> URL Shortener
+            </h1>
+            <p class="lead text-muted">
+                Transform your long URLs into short, shareable links with analytics and custom options.
+            </p>
+        </div>
+
+        <!-- URL Shortening Form -->
+        <div class="card shadow-sm mb-4">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">
+                    <i class="fas fa-cut"></i> Shorten Your URL
+                </h5>
+            </div>
+            <div class="card-body">
+                <form id="shortenForm" method="post">
+                    {% csrf_token %}
+                    <div class="row">
+                        <div class="col-12 mb-3">
+                            <label for="{{ form.original_url.id_for_label }}" class="form-label">
+                                {{ form.original_url.label }}
+                            </label>
+                            {{ form.original_url }}
+                            <div class="form-text">{{ form.original_url.help_text }}</div>
+                            {% if form.original_url.errors %}
+                                <div class="text-danger">{{ form.original_url.errors }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <!-- Advanced Options (Collapsible) -->
+                    <div class="accordion mb-3" id="advancedOptions">
+                        <div class="accordion-item">
+                            <h2 class="accordion-header">
+                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseAdvanced">
+                                    <i class="fas fa-cog me-2"></i> Advanced Options
+                                </button>
+                            </h2>
+                            <div id="collapseAdvanced" class="accordion-collapse collapse" data-bs-parent="#advancedOptions">
+                                <div class="accordion-body">
+                                    <div class="row">
+                                        <div class="col-md-6 mb-3">
+                                            <label for="{{ form.custom_code.id_for_label }}" class="form-label">
+                                                {{ form.custom_code.label }}
+                                            </label>
+                                            {{ form.custom_code }}
+                                            <div class="form-text">{{ form.custom_code.help_text }}</div>
+                                            {% if form.custom_code.errors %}
+                                                <div class="text-danger">{{ form.custom_code.errors }}</div>
+                                            {% endif %}
+                                        </div>
+                                        <div class="col-md-6 mb-3">
+                                            <label for="{{ form.expires_in_days.id_for_label }}" class="form-label">
+                                                {{ form.expires_in_days.label }}
+                                            </label>
+                                            {{ form.expires_in_days }}
+                                            <div class="form-text">{{ form.expires_in_days.help_text }}</div>
+                                            {% if form.expires_in_days.errors %}
+                                                <div class="text-danger">{{ form.expires_in_days.errors }}</div>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary btn-lg w-100" id="shortenBtn">
+                        <i class="fas fa-magic"></i> Shorten URL
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Success Result -->
+        {% if success_url %}
+        <div class="card shadow-sm border-success mb-4" id="resultCard">
+            <div class="card-header bg-success text-white">
+                <h5 class="mb-0">
+                    <i class="fas fa-check-circle"></i> URL Shortened Successfully!
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Your Short URL:</label>
+                    <div class="input-group">
+                        <input type="text" class="form-control" id="shortUrl" value="{{ success_url }}" readonly>
+                        <button class="btn btn-outline-primary" type="button" id="copyBtn" onclick="copyToClipboard()">
+                            <i class="fas fa-copy"></i> Copy
+                        </button>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-6">
+                        <small class="text-muted">
+                            <strong>Original:</strong> {{ original_url|truncatechars:50 }}
+                        </small>
+                    </div>
+                    <div class="col-md-6">
+                        <small class="text-muted">
+                            <strong>Code:</strong> {{ short_code }}
+                        </small>
+                    </div>
+                </div>
+                
+                <!-- QR Code -->
+                <div class="text-center mt-3">
+                    <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data={{ success_url }}" 
+                         alt="QR Code" class="img-fluid" style="max-width: 150px;">
+                    <br><small class="text-muted">QR Code for easy sharing</small>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Recent URLs -->
+        {% if recent_urls %}
+        <div class="card shadow-sm">
+            <div class="card-header bg-secondary text-white">
+                <h5 class="mb-0">
+                    <i class="fas fa-history"></i> Recent URLs
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-sm">
+                        <thead>
+                            <tr>
+                                <th>Short Code</th>
+                                <th>Original URL</th>
+                                <th>Clicks</th>
+                                <th>Created</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for url in recent_urls %}
+                            <tr>
+                                <td>
+                                    <code>{{ url.short_code }}</code>
+                                </td>
+                                <td>
+                                    <a href="{{ url.original_url }}" target="_blank" class="text-truncate" style="max-width: 200px; display: inline-block;">
+                                        {{ url.original_url|truncatechars:50 }}
+                                    </a>
+                                </td>
+                                <td>
+                                    <span class="badge bg-primary">{{ url.click_count }}</span>
+                                </td>
+                                <td>
+                                    <small class="text-muted">{{ url.created_at|date:"M d, Y" }}</small>
+                                </td>
+                                <td>
+                                    <button class="btn btn-sm btn-outline-primary" onclick="copyToClipboard('{{ url.short_url }}')">
+                                        <i class="fas fa-copy"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Features Section -->
+<div class="row mt-5">
+    <div class="col-12">
+        <h3 class="text-center mb-4">Features</h3>
+    </div>
+    <div class="col-md-4 mb-3">
+        <div class="card h-100 text-center">
+            <div class="card-body">
+                <i class="fas fa-tachometer-alt fa-3x text-primary mb-3"></i>
+                <h5>Fast & Reliable</h5>
+                <p class="text-muted">Lightning-fast URL shortening with 99.9% uptime guarantee.</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4 mb-3">
+        <div class="card h-100 text-center">
+            <div class="card-body">
+                <i class="fas fa-chart-line fa-3x text-success mb-3"></i>
+                <h5>Analytics</h5>
+                <p class="text-muted">Track clicks, analyze traffic, and monitor URL performance.</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4 mb-3">
+        <div class="card h-100 text-center">
+            <div class="card-body">
+                <i class="fas fa-shield-alt fa-3x text-warning mb-3"></i>
+                <h5>Secure</h5>
+                <p class="text-muted">SSL encrypted links with expiration controls and safety checks.</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Copy to clipboard functionality
+function copyToClipboard(text = null) {
+    const textToCopy = text || document.getElementById('shortUrl').value;
+    navigator.clipboard.writeText(textToCopy).then(function() {
+        // Update button text temporarily
+        const btn = document.getElementById('copyBtn');
+        const originalText = btn.innerHTML;
+        btn.innerHTML = '<i class="fas fa-check"></i> Copied!';
+        btn.classList.remove('btn-outline-primary');
+        btn.classList.add('btn-success');
+        
+        setTimeout(() => {
+            btn.innerHTML = originalText;
+            btn.classList.remove('btn-success');
+            btn.classList.add('btn-outline-primary');
+        }, 2000);
+    });
+}
+
+// AJAX form submission
+document.getElementById('shortenForm').addEventListener('submit', function(e) {
+    const btn = document.getElementById('shortenBtn');
+    const originalText = btn.innerHTML;
+    
+    // Show loading state
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Shortening...';
+    btn.disabled = true;
+    
+    // Reset loading state after form submission
+    setTimeout(() => {
+        btn.innerHTML = originalText;
+        btn.disabled = false;
+    }, 2000);
+});
+</script>
+{% endblock %}

@@ -1,0 +1,301 @@
+{% extends 'shortener/base.html' %}
+{% load static %}
+
+{% block title %}Analytics - URL Shortener{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <h1 class="mb-4">
+            <i class="fas fa-chart-bar"></i> URL Analytics Dashboard
+        </h1>
+    </div>
+</div>
+
+<!-- Statistics Cards -->
+<div class="row mb-4">
+    <div class="col-md-3 mb-3">
+        <div class="card bg-primary text-white h-100">
+            <div class="card-body text-center">
+                <i class="fas fa-link fa-2x mb-2"></i>
+                <h3>{{ total_urls }}</h3>
+                <p class="mb-0">Total URLs</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3 mb-3">
+        <div class="card bg-success text-white h-100">
+            <div class="card-body text-center">
+                <i class="fas fa-mouse-pointer fa-2x mb-2"></i>
+                <h3>{{ total_clicks }}</h3>
+                <p class="mb-0">Total Clicks</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3 mb-3">
+        <div class="card bg-warning text-white h-100">
+            <div class="card-body text-center">
+                <i class="fas fa-check-circle fa-2x mb-2"></i>
+                <h3>{{ active_urls }}</h3>
+                <p class="mb-0">Active URLs</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3 mb-3">
+        <div class="card bg-info text-white h-100">
+            <div class="card-body text-center">
+                <i class="fas fa-clock fa-2x mb-2"></i>
+                <h3>{{ recent_clicks }}</h3>
+                <p class="mb-0">Clicks (24h)</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- URL List -->
+<div class="card shadow-sm">
+    <div class="card-header bg-dark text-white">
+        <h5 class="mb-0">
+            <i class="fas fa-list"></i> URL Performance
+        </h5>
+    </div>
+    <div class="card-body">
+        {% if url_mappings %}
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead class="table-dark">
+                    <tr>
+                        <th>Short Code</th>
+                        <th>Original URL</th>
+                        <th>Clicks</th>
+                        <th>Created</th>
+                        <th>Expires</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for url in url_mappings %}
+                    <tr>
+                        <td>
+                            <code class="bg-light px-2 py-1 rounded">{{ url.short_code }}</code>
+                        </td>
+                        <td>
+                            <a href="{{ url.original_url }}" target="_blank" class="text-decoration-none">
+                                {{ url.original_url|truncatechars:60 }}
+                            </a>
+                        </td>
+                        <td>
+                            <span class="badge bg-primary fs-6">{{ url.click_count }}</span>
+                        </td>
+                        <td>
+                            <small class="text-muted">
+                                {{ url.created_at|date:"M d, Y H:i" }}
+                            </small>
+                        </td>
+                        <td>
+                            <small class="text-muted">
+                                {% if url.expires_at %}
+                                    {{ url.expires_at|date:"M d, Y" }}
+                                {% else %}
+                                    Never
+                                {% endif %}
+                            </small>
+                        </td>
+                        <td>
+                            {% if url.is_expired %}
+                                <span class="badge bg-danger">Expired</span>
+                            {% elif url.is_active %}
+                                <span class="badge bg-success">Active</span>
+                            {% else %}
+                                <span class="badge bg-secondary">Inactive</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <div class="btn-group btn-group-sm">
+                                <button class="btn btn-outline-primary btn-sm" 
+                                        onclick="copyToClipboard('{{ url.short_url }}')"
+                                        title="Copy URL">
+                                    <i class="fas fa-copy"></i>
+                                </button>
+                                <button class="btn btn-outline-info btn-sm" 
+                                        onclick="showUrlInfo('{{ url.short_code }}')"
+                                        title="View Details">
+                                    <i class="fas fa-info-circle"></i>
+                                </button>
+                                <a href="{{ url.short_url }}" class="btn btn-outline-success btn-sm" 
+                                   target="_blank" title="Visit URL">
+                                    <i class="fas fa-external-link-alt"></i>
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        
+        <!-- Pagination -->
+        {% if is_paginated %}
+        <nav class="mt-4">
+            <ul class="pagination justify-content-center">
+                {% if page_obj.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page=1">&laquo; First</a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.previous_page_number }}">Previous</a>
+                    </li>
+                {% endif %}
+                
+                <li class="page-item active">
+                    <span class="page-link">
+                        Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+                    </span>
+                </li>
+                
+                {% if page_obj.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.next_page_number }}">Next</a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}">Last &raquo;</a>
+                    </li>
+                {% endif %}
+            </ul>
+        </nav>
+        {% endif %}
+        
+        {% else %}
+        <div class="text-center py-5">
+            <i class="fas fa-chart-bar fa-3x text-muted mb-3"></i>
+            <h4>No URLs Found</h4>
+            <p class="text-muted">Start by creating your first short URL!</p>
+            <a href="{% url 'shortener:home' %}" class="btn btn-primary">
+                <i class="fas fa-plus"></i> Create Short URL
+            </a>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- URL Info Modal -->
+<div class="modal fade" id="urlInfoModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">URL Details</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="urlInfoContent">
+                <!-- Content loaded dynamically -->
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Copy to clipboard functionality
+function copyToClipboard(text) {
+    navigator.clipboard.writeText(text).then(function() {
+        // Show success message
+        const toast = document.createElement('div');
+        toast.className = 'toast align-items-center text-white bg-success border-0 position-fixed top-0 end-0 m-3';
+        toast.style.zIndex = '9999';
+        toast.innerHTML = `
+            <div class="d-flex">
+                <div class="toast-body">
+                    <i class="fas fa-check-circle me-2"></i>URL copied to clipboard!
+                </div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+            </div>
+        `;
+        document.body.appendChild(toast);
+        const bsToast = new bootstrap.Toast(toast);
+        bsToast.show();
+        
+        // Remove toast after it's hidden
+        toast.addEventListener('hidden.bs.toast', () => {
+            document.body.removeChild(toast);
+        });
+    });
+}
+
+// Show URL info modal
+function showUrlInfo(shortCode) {
+    fetch(`/api/info/${shortCode}/`)
+        .then(response => response.json())
+        .then(data => {
+            const modalContent = `
+                <div class="row">
+                    <div class="col-12">
+                        <table class="table table-borderless">
+                            <tr>
+                                <th>Short Code:</th>
+                                <td><code>${data.short_code}</code></td>
+                            </tr>
+                            <tr>
+                                <th>Short URL:</th>
+                                <td>
+                                    <a href="${data.short_url}" target="_blank">${data.short_url}</a>
+                                    <button class="btn btn-sm btn-outline-primary ms-2" 
+                                            onclick="copyToClipboard('${data.short_url}')">
+                                        <i class="fas fa-copy"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                            <tr>
+                                <th>Original URL:</th>
+                                <td>
+                                    <a href="${data.original_url}" target="_blank" class="text-break">
+                                        ${data.original_url}
+                                    </a>
+                                </td>
+                            </tr>
+                            <tr>
+                                <th>Created:</th>
+                                <td>${new Date(data.created_at).toLocaleDateString()}</td>
+                            </tr>
+                            <tr>
+                                <th>Expires:</th>
+                                <td>${data.expires_at ? new Date(data.expires_at).toLocaleDateString() : 'Never'}</td>
+                            </tr>
+                            <tr>
+                                <th>Total Clicks:</th>
+                                <td><span class="badge bg-primary">${data.click_count}</span></td>
+                            </tr>
+                            <tr>
+                                <th>Status:</th>
+                                <td>
+                                    ${data.is_expired ? 
+                                        '<span class="badge bg-danger">Expired</span>' : 
+                                        data.is_active ? 
+                                            '<span class="badge bg-success">Active</span>' : 
+                                            '<span class="badge bg-secondary">Inactive</span>'
+                                    }
+                                </td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+                
+                <!-- QR Code -->
+                <div class="text-center mt-3">
+                    <img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${data.short_url}" 
+                         alt="QR Code" class="img-fluid" style="max-width: 200px;">
+                    <br><small class="text-muted">QR Code for ${data.short_code}</small>
+                </div>
+            `;
+            
+            document.getElementById('urlInfoContent').innerHTML = modalContent;
+            const modal = new bootstrap.Modal(document.getElementById('urlInfoModal'));
+            modal.show();
+        })
+        .catch(error => {
+            console.error('Error fetching URL info:', error);
+        });
+}
+</script>
+{% endblock %}
