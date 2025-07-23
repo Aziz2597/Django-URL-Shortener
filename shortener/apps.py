@@ -7,8 +7,4 @@ class ShortenerConfig(AppConfig):
     verbose_name = 'URL Shortener'
     
     def ready(self):
-        """
-        This method is called when the app is ready.
-        It's a good place to register signals or perform other initialization.
-        """
         pass

@@ -1,13 +1,10 @@
-// Main JavaScript file for URL Shortener
-
 document.addEventListener('DOMContentLoaded', function() {
-    // Initialize tooltips
+    
     var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
     var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
         return new bootstrap.Tooltip(tooltipTriggerEl);
     });
 
-    // Form validation and submission
     const form = document.getElementById('shortenForm');
     if (form) {
         form.addEventListener('submit', handleFormSubmission);
@@ -19,7 +16,6 @@ document.addEventListener('DOMContentLoaded', function() {
         urlInput.focus();
     }
 
-    // Initialize copy buttons
     initializeCopyButtons();
     
     // Initialize analytics charts if on analytics page
@@ -28,16 +24,13 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 
-// Handle form submission
 function handleFormSubmission(event) {
     const submitButton = document.getElementById('shortenBtn');
     const originalText = submitButton.innerHTML;
     
-    // Show loading state
     submitButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Shortening...';
     submitButton.disabled = true;
     
-    // Add loading class
     submitButton.classList.add('btn-loading');
     
     // Validate form before submission
@@ -129,7 +122,6 @@ function fallbackCopyToClipboard(text) {
     }
 }
 
-// Update copy button appearance
 function updateCopyButton() {
     const copyBtn = document.getElementById('copyBtn');
     if (copyBtn) {
@@ -147,17 +139,14 @@ function updateCopyButton() {
     }
 }
 
-// Show success toast notification
 function showSuccessToast(message) {
     showToast(message, 'success');
 }
 
-// Show error message
 function showError(message) {
     showToast(message, 'danger');
 }
 
-// Generic toast notification function
 function showToast(message, type = 'success') {
     const toast = document.createElement('div');
     toast.className = `toast align-items-center text-white bg-${type} border-0 position-fixed`;
@@ -211,7 +200,6 @@ function showUrlInfo(shortCode) {
     const modal = document.getElementById('urlInfoModal');
     const modalContent = document.getElementById('urlInfoContent');
     
-    // Show loading state
     modalContent.innerHTML = `
         <div class="text-center py-4">
             <div class="spinner-border text-primary" role="status">
@@ -319,7 +307,6 @@ function deleteUrl(shortCode) {
     const deleteBtn = document.querySelector(`[onclick="deleteUrl('${shortCode}')"]`);
     const originalText = deleteBtn.innerHTML;
     
-    // Show loading state
     deleteBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
     deleteBtn.disabled = true;
     
@@ -371,7 +358,6 @@ function toggleUrlStatus(shortCode) {
     const toggleBtn = document.querySelector(`[onclick="toggleUrlStatus('${shortCode}')"]`);
     const originalText = toggleBtn.innerHTML;
     
-    // Show loading state
     toggleBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
     toggleBtn.disabled = true;
     
@@ -421,7 +407,7 @@ function toggleUrlStatus(shortCode) {
     });
 }
 
-// Initialize analytics charts (if Chart.js is available)
+// Initialize analytics charts 
 function initializeAnalytics() {
     const clicksChartCanvas = document.getElementById('clicksChart');
     if (!clicksChartCanvas || typeof Chart === 'undefined') {
@@ -465,7 +451,6 @@ function initializeAnalytics() {
                 }
             });
             
-            // Top URLs chart (if canvas exists)
             const topUrlsCanvas = document.getElementById('topUrlsChart');
             if (topUrlsCanvas && data.top_urls) {
                 const topCtx = topUrlsCanvas.getContext('2d');
@@ -548,7 +533,6 @@ function handleBulkAction(action) {
     const bulkBtn = document.getElementById('bulkActionBtn');
     const originalText = bulkBtn.innerHTML;
     
-    // Show loading state
     bulkBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
     bulkBtn.disabled = true;
     
@@ -670,7 +654,7 @@ function performSearch(query) {
     
     const params = new URLSearchParams(window.location.search);
     params.set('search', query);
-    params.delete('page'); // Reset to first page
+    params.delete('page'); 
     
     const newUrl = `${window.location.pathname}?${params.toString()}`;
     
@@ -688,10 +672,9 @@ function performSearch(query) {
         
         if (newTableBody) {
             tableBody.innerHTML = newTableBody.innerHTML;
-            initializeCopyButtons(); // Re-initialize copy buttons for new content
+            initializeCopyButtons(); 
         }
         
-        // Update pagination if it exists
         const currentPagination = document.querySelector('.pagination');
         if (currentPagination && newPagination) {
             currentPagination.outerHTML = newPagination.outerHTML;
@@ -706,5 +689,4 @@ function performSearch(query) {
     });
 }
 
-// Initialize search on page load
 document.addEventListener('DOMContentLoaded', initializeSearch);
