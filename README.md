@@ -5,7 +5,7 @@
 
 A fully-featured URL shortening service built with Django that provides custom short URLs, analytics, and expiration features.
 
-![URL Shortener Interface](assets\screenshots\image.png)
+![URL Shortener Interface](assets/screenshots/image.png)
 
 ## Features
 
