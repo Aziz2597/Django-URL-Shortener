@@ -28,6 +28,9 @@ venv.bak/
 local_settings.py
 db.sqlite3
 
+shortener/migrations/
+url_shortener/__pycache__/
+shortener/__pycache__/
 
 # Static/media uploads (if you never commit generated files)
 staticfiles/
